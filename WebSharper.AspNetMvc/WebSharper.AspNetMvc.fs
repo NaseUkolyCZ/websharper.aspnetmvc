@@ -59,11 +59,14 @@ type Filter() =
     /// Default: "WebSharper.RemotingModule"
     member val RemotingModuleName = "WebSharper.RemotingModule" with get, set
 
-    interface IAuthorizationFilter with
+    interface IActionFilter with
 
-        member this.OnAuthorization(filterCtx) =
+        member this.OnActionExecuted(filterCtx) =
+            0 |> ignore
+
+        member this.OnActionExecuting(filterCtx) =
             let logger = LogManager.GetLogger("WebSharper.AspNetMvc")            
-            logger.Debug( "OnAuthorization entered" )
+            logger.Debug( "OnActionExecuting entered" )
 
             try             
                 let httpCtx = filterCtx.HttpContext
@@ -86,6 +89,6 @@ type Filter() =
                         logger.DebugFormat( "m {0}", m )
                         tryRun (m.TryProcessRequest httpCtx) |> ignore
                     | _ -> ()
-                logger.Debug( "OnAuthorization done" )
+                logger.Debug( "OnActionExecuting done" )
             with
-                | ex -> logger.Fatal( (sprintf "OnAuthorization failed" ), ex )
+                | ex -> logger.Fatal( (sprintf "OnActionExecuting failed" ), ex )
