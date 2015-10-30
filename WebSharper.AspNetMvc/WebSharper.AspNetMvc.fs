@@ -5,6 +5,7 @@ open System.Runtime.CompilerServices
 open System.Web
 open System.Web.Mvc
 open WebSharper
+open log4net
 
 module ScriptManager =
 
@@ -61,20 +62,30 @@ type Filter() =
     interface IAuthorizationFilter with
 
         member this.OnAuthorization(filterCtx) =
-            let httpCtx = filterCtx.HttpContext
-            let tryRun (action: option<Async<unit>>) =
-                action |> Option.map (fun run ->
-                    filterCtx.Result <-
-                        { new ActionResult() with
-                            member this.ExecuteResult(_) =
-                                Async.RunSynchronously run })
-            let isRemoting =
-                match httpCtx.ApplicationInstance.Modules.[this.RemotingModuleName] with
-                | :? Web.RpcModule as m ->
-                    tryRun (m.TryProcessRequest httpCtx) |> Option.isSome
-                | _ -> false
-            if this.SiteletsOverrideMvc && not isRemoting then
-                match httpCtx.ApplicationInstance.Modules.[this.SiteletsModuleName] with
-                | :? Sitelets.HttpModule as m ->
-                    tryRun (m.TryProcessRequest httpCtx) |> ignore
-                | _ -> ()
+            let logger = LogManager.GetLogger("WebSharper.AspNetMvc")            
+            logger.Debug( "OnAuthorization entered" )
+
+            try             
+                let httpCtx = filterCtx.HttpContext
+                let tryRun (action: option<Async<unit>>) =
+                    action |> Option.map (fun run ->
+                        filterCtx.Result <-
+                            { new ActionResult() with
+                                member this.ExecuteResult(_) =
+                                    Async.RunSynchronously run })
+                let isRemoting =
+                    match httpCtx.ApplicationInstance.Modules.[this.RemotingModuleName] with
+                    | :? Web.RpcModule as m ->
+                        tryRun (m.TryProcessRequest httpCtx) |> Option.isSome
+                    | _ -> false
+                logger.DebugFormat( "SiteletsOverrideMvc {0}, isRemoting {1}", this.SiteletsOverrideMvc, isRemoting )
+                if this.SiteletsOverrideMvc && not isRemoting then
+                    logger.DebugFormat( "SiteletsModuleName {0}, httpCtx.ApplicationInstance.Modules.[this.SiteletsModuleName] {1}", this.SiteletsModuleName, httpCtx.ApplicationInstance.Modules.[this.SiteletsModuleName] )
+                    match httpCtx.ApplicationInstance.Modules.[this.SiteletsModuleName] with
+                    | :? Sitelets.HttpModule as m ->
+                        logger.DebugFormat( "m {0}", m )
+                        tryRun (m.TryProcessRequest httpCtx) |> ignore
+                    | _ -> ()
+                logger.Debug( "OnAuthorization done" )
+            with
+                | ex -> logger.Fatal( (sprintf "OnAuthorization failed" ), ex )
