@@ -4,6 +4,7 @@ open System.IO
 open System.Runtime.CompilerServices
 open System.Web
 open System.Web.Mvc
+open System.Web.Mvc.Filters
 open WebSharper
 open log4net
 
@@ -59,12 +60,12 @@ type Filter() =
     /// Default: "WebSharper.RemotingModule"
     member val RemotingModuleName = "WebSharper.RemotingModule" with get, set
 
-    interface IActionFilter with
+    interface IAuthenticationFilter with
 
-        member this.OnActionExecuted(filterCtx) =
+        member this.OnAuthentication(filterCtx) =
             0 |> ignore
 
-        member this.OnActionExecuting(filterCtx) =
+        member this.OnAuthenticationChallenge(filterCtx) =
             let logger = LogManager.GetLogger("WebSharper.AspNetMvc")            
             logger.Debug( "OnActionExecuting entered" )
 

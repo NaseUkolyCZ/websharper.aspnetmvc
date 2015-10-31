@@ -5,7 +5,7 @@ let bt =
     BuildTool().PackageId("WebSharper.AspNetMvc")
         .VersionFrom("WebSharper")
         .WithFSharpVersion(FSharpVersion.FSharp30)
-        .WithFramework(fun fw -> fw.Net40)
+        .WithFramework(fun fw -> fw.Net45)
 
 let main =
     bt.WebSharper.Library("WebSharper.AspNetMvc")
@@ -14,7 +14,8 @@ let main =
             [
                 r.Assembly("System.Web")
                 r.Assembly("System.ComponentModel.DataAnnotations")
-                r.NuGet("Microsoft.AspNet.Mvc").Version("[4.0.30506]").Reference()
+                r.NuGet("Microsoft.AspNet.Mvc").Version("[5.2.3]").Reference()
+                r.NuGet("log4net").Version("[2.0.3]").Reference()
             ])
 
 bt.Solution [
@@ -28,7 +29,7 @@ bt.Solution [
                 ProjectUrl = Some "https://github.com/intellifactory/websharper.aspnetmvc"
                 Description = "WebSharper module for ASP.NET MVC"
                 RequiresLicenseAcceptance = true })
-        .AddDependency("Microsoft.AspNet.Mvc", "[4.0,6.0)")
+        .AddDependency("Microsoft.AspNet.Mvc", "[5.0,6.0)")
         .Add(main)
 ]
 |> bt.Dispatch
